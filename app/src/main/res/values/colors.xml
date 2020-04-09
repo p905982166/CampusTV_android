@@ -1,8 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorPrimary">#ff008556</color>
+    <color name="colorPrimaryDark">#ff00aaff</color>
     <color name="colorAccent">#D81B60</color>
+
+
+    <color name="background_card">#B3ffffff</color>
+    <color name="full_transparent">#00000000</color>
+    <color name="half_transparent">#aa000000</color>
+
     <color name="white">#FFFFFF</color>
-    <color name="bottom">#ffefefed</color>
+    <color name="pureWhite">#ffffffff</color>
+    <color name="translucenceWhite">#7fffffff</color>
+    <color name="lowWhite">#fff8f8f8</color>
+    <color name="btn_background">#7ff8f8f8</color>
+    <color name="lightWhite">#f8f8f8</color>
+    <color name="graygai">#D9D9D9</color>
+    <color name="grey">#666666</color>
+    <color name="fullGrey">#FF666666</color>
+    <color name="black">#000000</color>
+    <color name="lowBlack">#333333</color>
+    <color name="fullBlack">#FF333333</color>
+    <color name="darkBlack">#ff000000</color>
+    <color name="lightBlack">#5c000000</color>
+    <color name="graylight">#CCCCCC</color>
+    <color name="gray">#808080</color>
+    <color name="main">#00abec</color>
+    <color name="red">#FF0000</color>
+    <color name="lightRed">#F76778</color>
+    <color name="gold">#FFD700</color>
+    <color name="yellow">#FFFF00</color>
+    <color name="green">#008000</color>
+    <color name="blue">#0000FF</color>
+    <color name="blueDivider">#661151ea</color>
+    <color name="fullBlue">#0443e7</color>
+    <color name="blowBlue">#375AFE</color>
+    <color name="textBlue">#0737D2</color>
+    <color name="textBackground">#ff60ccf0</color>
+    <color name="navigation_bar">#00abec</color>
+    <color name="proBlue">#ff0909e7</color>
+    <color name="purple">#800080</color>
+    <color name="pink">#FFC0CB</color>
+    <color name="lemonyellow">#FFFACD</color>
+    <color name="graywhite">#F5F5F5</color>
+    <color name="grayc">#CCCCCC</color>
+    <color name="graya">#AAAAAA</color>
+    <color name="grayslate">#708090</color>
+    <color name="fwtgray">#F5F7F7</color>
+    <color name="lightblue">#0083FF</color>
+    <color name="lowBlue">#00aaff</color>
+    <color name="bg_color_deep">#E5E5E5</color>
+    <color name="full_bg_color_deep">#FFE5E5E5</color>
+    <color name="main_bg">#f2f2f2</color>
+    <color name="text_hint">#757575</color>
+    <color name="main_bg_text">#999999</color>
+    <color name="btn_select">#015b7d</color> <!-- #E80000-->
+    <color name="btn_enabled">#999999</color> <!-- #66E80000 -->
+    <color name="tab_divider_color">#F9F6F6</color>
+    <color name="file_bottom_line">#ECECEC</color>
+    <color name="file_picker_title">#4A4A4A</color>
+    <color name="file_picker_des">#86848B</color>
 </resources>

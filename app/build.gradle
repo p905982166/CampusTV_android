@@ -1,15 +1,25 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    compileSdkVersion project.properties.compileSdkVersion
+    buildToolsVersion project.properties.buildToolsVersion
+
+    flavorDimensions "default"
+
     defaultConfig {
-        applicationId "com.pxy.android.CPRAuxiliary"
-        minSdkVersion 19
-        targetSdkVersion 28
+        applicationId "com.panxy.campustv"
+        minSdkVersion project.properties.minSdkVersion
+        targetSdkVersion project.properties.targetSdkVersion
         versionCode 1
         versionName "1.0.1"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //配置使用Multidex
+        multiDexEnabled true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
     }
     buildTypes {
         release {
@@ -17,29 +27,71 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.10.2"
+        }
+    }
+// 打包后应用名称
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            def fileName
+            if (variant.buildType.name.equals('release')) {
+                variant.getPackageApplicationProvider().get().outputDirectory = new File(project.rootDir.absolutePath, "apk")
+                if (variant.productFlavors[0].name.equals('Develop')) {
+                    fileName = "CampusTV_Test-${defaultConfig.versionName}-release.apk"
+                } else if (variant.productFlavors[0].name.equals('Produce')) {
+                    fileName = "CampusTV-${defaultConfig.versionName}-release.apk"
+                } else {
+                    fileName = "CampusTV${variant.productFlavors[0].name}-${defaultConfig.versionName}-release.apk"
+                }
+            } else if (variant.buildType.name.equals('debug')) {
+                if (variant.productFlavors[0].name.equals('Develop')) {
+                    fileName = "CampusTV_Test-${defaultConfig.versionName}-debug.apk"
+                } else if (variant.productFlavors[0].name.equals('Produce')) {
+                    fileName = "CampusTV-${defaultConfig.versionName}-debug.apk"
+                } else {
+                    fileName = "CampusTV${variant.productFlavors[0].name}-${defaultConfig.versionName}-debug.apk"
+                }
+            }
+            outputFileName = fileName
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+    productFlavors {
+        Develop {
+        }
+        QuasiProduction {
+        }
+        Produce {
+        }
     }
 }
+
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
-    implementation 'androidx.navigation:navigation-fragment:2.1.0'
-    implementation 'androidx.navigation:navigation-ui:2.1.0'
-    implementation 'com.android.support:recyclerview-v7:28.1.0'
-    implementation 'com.android.support:cardview-v7:28.1.0'
-
+    implementation project.properties.appCompatVersion
+    implementation project.properties.design
+    implementation project.properties.annotations
+    implementation project.properties.constraintLayoutVersion
+    implementation 'android.arch.lifecycle:extensions:1.1.1'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation ('com.android.support.test.espresso:espresso-core:3.2.0', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    implementation 'com.jakewharton:butterknife:10.0.0'
-    annotationProcessor  'com.jakewharton:butterknife-compiler:10.0.0'
-
-
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation project.properties.multidex
+    implementation project.properties.okhttp3
+    implementation project.properties.googleGson
+//    implementation project.properties.MagicIndicator
+//    implementation project.properties.SmartRefreshLayout
+    implementation project.properties.rxJava
+    implementation project.properties.rxpermissions
+    implementation project.properties.glide
+    implementation project.properties.permission
+    implementation project.properties.alibabaFastjson
+    implementation project.properties.xutils3
+    implementation project.properties.utilcode
 }
