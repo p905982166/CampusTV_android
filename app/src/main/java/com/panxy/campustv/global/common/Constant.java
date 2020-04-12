@@ -25,10 +25,22 @@ public interface Constant {
     /** 更新已上传UI */
     int REFRESH_UPLOADED = 9;
 
-    /** 删除已上传 */
-    int DELETE_UPLOADED = 10;
+    /** 选择用户头像 */
+    int SELECT_HEAD_IMAGE = 10;
 
     /** 选择新闻图标 */
     int SELECT_ICON = 11;
 
+    /** 选择新闻图标 */
+    int SELECT_VIDEO = 12;
+
+    /** 选择新闻图片 */
+    int SELECT_IMAGE = 13;
+
+    /** 选择新闻图片 */
+    int SUBMIT_SAVE_NEWS = 14;
+
+    int REQUEST_NEWS_SUCCESS = 15;
+
+    int REQUEST_HEAD_IMAGE_SUCCESS = 16;
 }

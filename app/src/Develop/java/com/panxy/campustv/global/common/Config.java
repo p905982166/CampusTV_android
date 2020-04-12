@@ -9,7 +9,7 @@ public interface Config {
     String test_domain = "http://192.168.43.249:8080/h5/";
 
     //知律请求接口url  测试
-    String campus_accept_web = "http://www.complicated.top:8088/";
+    String campus_accept_web = "http://192.168.43.249:8888/";
 
 
     /**

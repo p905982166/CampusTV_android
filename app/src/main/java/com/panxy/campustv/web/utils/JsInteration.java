@@ -6,10 +6,12 @@ import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
+import com.alibaba.fastjson.JSONObject;
 import com.panxy.campustv.global.common.Constant;
 import com.panxy.campustv.global.main.CampusTvApplication;
 import com.panxy.campustv.global.utils.LogUtil;
 import com.panxy.campustv.global.utils.NotchScreenUtil;
+
 
 import static com.panxy.campustv.global.utils.NotchScreenUtil.DEVICE_BRAND_HUAWEI;
 import static com.panxy.campustv.global.utils.NotchScreenUtil.DEVICE_BRAND_OPPO;
@@ -25,29 +27,13 @@ public class JsInteration {
         mContext = context;
     }
 
-    /**
-     * 上传文件
-     * @param jobId 任务id
-     */
     @JavascriptInterface
-    public void uploadFile(String jobId) {
-        LogUtil.e(TAG, "上传文件");
+    public void uploadHeadImage(String cookie){
         Message message = mHandler.obtainMessage();
-        message.what = Constant.UPLOAD_SELECT_FILES;
-        message.obj = jobId;
-        mHandler.sendMessage(message);
-    }
-
-    /**
-     * 查看已上传文档，弹出弹窗
-     * @param jobId 任务id
-     */
-    @JavascriptInterface
-    public void popupUploaded(String jobId) {
-        LogUtil.e(TAG, "已上传");
-        Message message = mHandler.obtainMessage();
-        message.what = Constant.POPUP_UPLOADED;
-        message.obj = jobId;
+        message.what = Constant.SELECT_HEAD_IMAGE;
+        JSONObject jo = new JSONObject();
+        jo.put("cookie", cookie);
+        message.obj = jo;
         mHandler.sendMessage(message);
     }
 
@@ -56,7 +42,31 @@ public class JsInteration {
         Message message = mHandler.obtainMessage();
         message.what = Constant.SELECT_ICON;
         mHandler.sendMessage(message);
+    }
+    @JavascriptInterface
+    public void selectNewsVideo() {
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SELECT_VIDEO;
+        mHandler.sendMessage(message);
+    }
 
+    @JavascriptInterface
+    public void selectNewsImg() {
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SELECT_IMAGE;
+        mHandler.sendMessage(message);
+    }
+    @JavascriptInterface
+    public void submitSaveNews(String newsInfo, String bodyItem,String server, String cookie){
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SUBMIT_SAVE_NEWS;
+        JSONObject jo = new JSONObject();
+        jo.put("newsInfo", newsInfo);
+        jo.put("bodyItem", bodyItem);
+        jo.put("server", server);
+        jo.put("cookie", cookie);
+        message.obj = jo;
+        mHandler.sendMessage(message);
     }
 
     @JavascriptInterface

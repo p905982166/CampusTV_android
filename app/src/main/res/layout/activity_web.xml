@@ -30,4 +30,10 @@
         android:src="@mipmap/error"
         android:visibility="gone" />
 
+    <FrameLayout
+
+        android:id="@+id/flVideoContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </FrameLayout>
 </FrameLayout>
