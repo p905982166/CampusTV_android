@@ -6,6 +6,7 @@ import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.panxy.campustv.global.common.Constant;
 import com.panxy.campustv.global.main.CampusTvApplication;
@@ -32,6 +33,32 @@ public class JsInteration {
         Message message = mHandler.obtainMessage();
         message.what = Constant.SELECT_HEAD_IMAGE;
         JSONObject jo = new JSONObject();
+        jo.put("cookie", cookie);
+        message.obj = jo;
+        mHandler.sendMessage(message);
+    }
+
+    @JavascriptInterface
+    public void socialCamera(){
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SOCIAL_CAMERA;
+        mHandler.sendMessage(message);
+    }
+
+    @JavascriptInterface
+    public void socialAlbum(){
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SOCIAL_ALBUM;
+        mHandler.sendMessage(message);
+    }
+
+    @JavascriptInterface
+    public void createSocial(String socialBody, String fileList, String cookie){
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SUBMIT_CREATE_SOCIAL;
+        JSONObject jo = new JSONObject();
+        jo.put("socialBody", socialBody);
+        jo.put("fileList", fileList);
         jo.put("cookie", cookie);
         message.obj = jo;
         mHandler.sendMessage(message);

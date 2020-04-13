@@ -27,20 +27,20 @@ public class HttpUtil {
      * 单例 okHttpClient
      */
     private static OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
-    public static void doAsynchFileHttpPost(String url, List<File> files, ProgressListener uiProgressRequestListener, Callback callback, String cookie) {
-        OkHttpClient currentOkHttpClient = okHttpClient.newBuilder().connectTimeout(20000, TimeUnit.SECONDS).build();
+//    public static void doAsynchFileHttpPost(String url, List<File> files, ProgressListener uiProgressRequestListener, Callback callback, String cookie) {
+//        OkHttpClient currentOkHttpClient = okHttpClient.newBuilder().connectTimeout(20000, TimeUnit.SECONDS).build();
+//
+//        currentOkHttpClient.newCall(getRequest(url, files,null, uiProgressRequestListener, cookie)).enqueue(callback);
+//
+//    }
 
-        currentOkHttpClient.newCall(getRequest(url, files,null, uiProgressRequestListener, cookie)).enqueue(callback);
-
-    }
-
-    public static void doAsynchFileHttpPost(String url, List<File> files, NewsListsWithBLOBs object, ProgressListener uiProgressRequestListener, Callback callback, String cookie) {
+    public static void doAsynchFileHttpPost(String url, List<File> files, Object object, ProgressListener uiProgressRequestListener, Callback callback, String cookie) {
         OkHttpClient currentOkHttpClient = okHttpClient.newBuilder().connectTimeout(20000, TimeUnit.SECONDS).build();
 
         currentOkHttpClient.newCall(getRequest(url, files,object, uiProgressRequestListener, cookie)).enqueue(callback);
 
     }
-    private static Request getRequest(String url, List<File> files, NewsListsWithBLOBs object, ProgressListener uiProgressRequestListener, String cookie) {
+    private static Request getRequest(String url, List<File> files, Object object, ProgressListener uiProgressRequestListener, String cookie) {
         Request.Builder builder = new Request.Builder();
         builder.url(url).addHeader("user_cookie", cookie)
                 .post(ProgressHelper.addProgressRequestListener(
@@ -48,7 +48,9 @@ public class HttpUtil {
                         uiProgressRequestListener));
         return builder.build();
     }
-    private static RequestBody getRequestBody(List<File> files, NewsListsWithBLOBs object, String cookie) {
+
+
+    private static RequestBody getRequestBody(List<File> files, Object object, String cookie) {
         //创建MultipartBody.Builder，用于添加请求的数据
         MultipartBody.Builder builder = new MultipartBody.Builder();
         //builder.addPart(RequestBody.create(null, object));
@@ -69,7 +71,12 @@ public class HttpUtil {
             );
         }
         if(object != null){
-            builder.addFormDataPart("news_info", JSON.toJSONString(object));
+            if(object instanceof NewsListsWithBLOBs){
+                builder.addFormDataPart("news_info", JSON.toJSONString((NewsListsWithBLOBs)object));
+            }else if(object instanceof String){
+                builder.addFormDataPart("body", (String) object);
+            }
+
         }
 
         builder.addFormDataPart("cookie", cookie);

@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -71,12 +72,14 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
     private String iconRealPath = "";
     private String videoRealPath = "";
     private String imageRealPath = "";
-    
+
     private int function = 0;
     private final int FUNCTION_PICK_NEWS_ICON = 1;
     private final int FUNCTION_PICK_NEWS_VIDEO = 2;
     private final int FUNCTION_PICK_NEWS_IMAGE = 3;
     private final int FUNCTION_PICK_HEAD_IMAGE = 4;
+    private final int FUNCTION_SOCIAL_CAMERA = 5;
+    private final int FUNCTION_SOCIAL_ALBUM = 6;
     private String cookie = "";
 
     private WebView mWebview;
@@ -103,14 +106,20 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                     cookie = jo.getString("cookie");
                     selectHeadImage();
                     break;
+                case Constant.SOCIAL_CAMERA:
+                    selectSocialCamera();
+                    break;
+                case Constant.SOCIAL_ALBUM:
+                    selectSocialAlbum();
+                    break;
                 case Constant.SELECT_ICON:
-                    selectIcon();
+                    selectNewsIcon();
                     break;
                 case Constant.SELECT_VIDEO:
-                    selectVideo();
+                    selectNewsVideo();
                     break;
                 case Constant.SELECT_IMAGE:
-                    selectImg();
+                    selectNewsImg();
                     break;
                 case Constant.SUBMIT_SAVE_NEWS:
                     jo = (JSONObject) msg.obj;
@@ -125,7 +134,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                     jo = (JSONObject) msg.obj;
                     if(jo.getString("state").equals("200")){
                         Integer newsId = jo.getInteger("news_id");
-                        Toast.makeText(WebActivity.this, "成功 新闻id：" + newsId, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(WebActivity.this, "成功创建新闻id：" + newsId, Toast.LENGTH_SHORT).show();
                         mWebview.evaluateJavascript("javascript:stopEdit('" + newsId +"')", null);
                         iconRealPath = "";
                         videoRealPath = "";
@@ -142,11 +151,69 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                         Toast.makeText(WebActivity.this, "上传失败", Toast.LENGTH_SHORT).show();
                     }
                     break;
+                case Constant.SUBMIT_CREATE_SOCIAL:
+                    jo = (JSONObject) msg.obj;
+                    String socialBody = jo.getString("socialBody");
+                    String fileList = jo.getString("fileList");
+                    cookie = jo.getString("cookie");
+                    createSocial(socialBody, fileList, cookie);
+                    break;
+                case Constant.REQUEST_SOCIAL_SUCCESS:
+                    jo = (JSONObject) msg.obj;
+                    if(jo.getString("state").equals("200")){
+                        Toast.makeText(WebActivity.this, "动态发布成功", Toast.LENGTH_SHORT).show();
+
+                    }else {
+                        Toast.makeText(WebActivity.this, jo.getString("msg"), Toast.LENGTH_SHORT).show();
+                    }
+                    break;
                 default:
                     break;
             }
         }
     };
+
+    private void createSocial(String socialBody, String fileList, String cookie) {
+
+        JSONArray fileArray = JSONArray.parseArray(fileList);
+
+        List<File> files = new ArrayList<>();
+        for (Object o : fileArray) {
+            String oldPath = (String) o;
+            if(oldPath.contains("http://androidimg")){
+                String path = oldPath.substring("http://androidimg".length());
+                File file = new File(path);
+                files.add(file);
+            }
+        }
+
+        HttpUtil.doAsynchFileHttpPost(RequestUrl.CREATE_SOCIAL, files, socialBody,
+                new ProgressListener() {
+                    @Override
+                    public void onProgress(long currentBytes, long contentLength, boolean done) {
+                        int progress = (int) ((100 * currentBytes) / contentLength);
+                        Log.i("uploading", (100 * currentBytes) / contentLength + " % done ");
+                    }
+                }, new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String res = response.body().string();
+                        JSONObject resObj = JSONObject.parseObject(res);
+                        Message message = mHandler.obtainMessage();
+                        message.what = Constant.REQUEST_SOCIAL_SUCCESS;
+                        message.obj = resObj;
+                        mHandler.sendMessage(message);
+
+
+                    }
+                }, cookie);
+
+    }
 
     private File copyFile(File file){
         long timeStamp = System.currentTimeMillis();
@@ -470,7 +537,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
     }
 
     //目前只实现了选择一个图标
-    private void selectIcon() {
+    private void selectNewsIcon() {
         AndPermission.with(WebActivity.this)
                 .runtime()
                 .permission(com.yanzhenjie.permission.Permission.Group.STORAGE)
@@ -494,7 +561,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                 .start();
     }
 
-    private void selectVideo(){
+    private void selectNewsVideo(){
         AndPermission.with(WebActivity.this)
                 .runtime()
                 .permission(com.yanzhenjie.permission.Permission.Group.STORAGE)
@@ -518,7 +585,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                 .start();
     }
 
-    private void selectImg() {
+    private void selectNewsImg() {
         AndPermission.with(WebActivity.this)
                 .runtime()
                 .permission(com.yanzhenjie.permission.Permission.Group.STORAGE)
@@ -527,6 +594,52 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                     public void onAction(List<String> data) {
                         //打开相册
                         function = FUNCTION_PICK_NEWS_IMAGE;  //表示现在做选择图片的动作
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.setType("image/*");
+                        startActivityForResult(intent, 1); // 打开相册
+
+                    }
+                })
+                .onDenied(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        Toast.makeText(WebActivity.this,"读写sdk权限被拒绝",Toast.LENGTH_LONG).show();
+                    }
+                })
+                .start();
+    }
+
+    private void selectSocialCamera() {
+        AndPermission.with(WebActivity.this)
+                .runtime()
+                .permission(com.yanzhenjie.permission.Permission.Group.STORAGE)
+                .onGranted(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        //打开相册
+                        function = FUNCTION_SOCIAL_CAMERA;  //表示现在做选择图片的动作
+                        openSysCamera();
+
+                    }
+                })
+                .onDenied(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        Toast.makeText(WebActivity.this,"读写sdk权限被拒绝",Toast.LENGTH_LONG).show();
+                    }
+                })
+                .start();
+    }
+
+    private void selectSocialAlbum() {
+        AndPermission.with(WebActivity.this)
+                .runtime()
+                .permission(com.yanzhenjie.permission.Permission.Group.STORAGE)
+                .onGranted(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        //打开相册
+                        function = FUNCTION_SOCIAL_ALBUM;  //表示现在做选择图片的动作
                         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                         intent.setType("image/*");
                         startActivityForResult(intent, 1); // 打开相册
@@ -559,10 +672,58 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                     }
                 }
                 break;
+            case 0:
+                //相机返回
+                if(resultCode == Activity.RESULT_OK){
+                    //合同审核-拍照
+                    try {
+                        //压缩照片
+                        FileInputStream fis = new FileInputStream(outputImage.getPath());
+                        Bitmap bitmap  = BitmapFactory.decodeStream(fis);
+                        Bitmap compressBitmap = ImageCompressL(bitmap);
+                        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outputImage));
+                        compressBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                        bos.flush();
+                        bos.close();
+                        mWebview.evaluateJavascript("javascript:addFile('"+ outputImage.getPath() +"')", null);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
 
         }
 
     }
+
+    private File outputImage;
+    private Uri imageUri;
+
+    private void openSysCamera() {
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        long timeStamp = System.currentTimeMillis();
+
+        int random = (int)(Math.random() * 1000);
+
+        outputImage = new File(getExternalCacheDir(), timeStamp + "" + random + ".jpg");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            //大于等于版本24（7.0）的场合
+            imageUri = FileProvider.getUriForFile(WebActivity.this, "com.panxy.campustv.fileprovider", outputImage);
+        } else {
+            //小于android 版本7.0（24）的场合
+            imageUri = Uri.fromFile(outputImage);
+        }
+
+        //启动相机程序
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        //MediaStore.ACTION_IMAGE_CAPTURE = android.media.action.IMAGE_CAPTURE
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        startActivityForResult(intent, 0);
+
+    }
+
 
     @TargetApi(19)
     private void handleImageOnKitKat(Intent data) {
@@ -576,6 +737,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                 // 解析出数字格式的id
                 String selection = MediaStore.Images.Media._ID + "=" + id;
                 if(function == FUNCTION_PICK_NEWS_ICON
+                        || function == FUNCTION_SOCIAL_ALBUM
                         || function == FUNCTION_PICK_HEAD_IMAGE
                         || function == FUNCTION_PICK_NEWS_IMAGE){
                     //Images
@@ -675,7 +837,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                         headImagePath = temp.getPath();
                         List<File> files = new ArrayList<>();
                         files.add(temp);
-                        HttpUtil.doAsynchFileHttpPost(RequestUrl.UPLOAD_HEAD_IMAGE, files,
+                        HttpUtil.doAsynchFileHttpPost(RequestUrl.UPLOAD_HEAD_IMAGE, files, null,
                                 new ProgressListener() {
                                     @Override
                                     public void onProgress(long currentBytes, long contentLength, boolean done) {
@@ -727,6 +889,11 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                     imageRealPath = filePath;
                     mWebview.evaluateJavascript(
                             "javascript:addImg("+ tempPath +")", null);
+                    break;
+                case FUNCTION_SOCIAL_ALBUM:
+                    imageRealPath = filePath;
+                    mWebview.evaluateJavascript(
+                            "javascript:addFile("+ tempPath +")", null);
                     break;
             }
 

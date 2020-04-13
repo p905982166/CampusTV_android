@@ -20,10 +20,10 @@ public interface Constant {
     int backFromUploadSuccess = 7;
 
     /** 查看已上传文件 */
-    int POPUP_UPLOADED = 8;
+    int SOCIAL_ALBUM = 8;
 
     /** 更新已上传UI */
-    int REFRESH_UPLOADED = 9;
+    int SOCIAL_CAMERA = 9;
 
     /** 选择用户头像 */
     int SELECT_HEAD_IMAGE = 10;
@@ -43,4 +43,8 @@ public interface Constant {
     int REQUEST_NEWS_SUCCESS = 15;
 
     int REQUEST_HEAD_IMAGE_SUCCESS = 16;
+
+    int SUBMIT_CREATE_SOCIAL = 17;
+
+    int REQUEST_SOCIAL_SUCCESS = 18;
 }

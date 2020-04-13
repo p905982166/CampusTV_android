@@ -10,6 +10,8 @@ public interface RequestUrl {
 
     /** 创建新闻 */
     String CREATE_NEWS = Config.campus_accept_web + "news/createNews";
+    /** 创建动态 */
+    String CREATE_SOCIAL = Config.campus_accept_web + "social/createSocial";
 
 
 }
