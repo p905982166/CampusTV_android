@@ -47,4 +47,16 @@ public interface Constant {
     int SUBMIT_CREATE_SOCIAL = 17;
 
     int REQUEST_SOCIAL_SUCCESS = 18;
+
+    /** 选择新闻图片 */
+    int SELECT_TEAM_LOGO = 19;
+
+    /** 创建球队 */
+    int SUBMIT_CREATE_TEAM = 20;
+
+    int REQUEST_CREATE_TEAM_SUCCESS = 21;
+
+    int INTO_ROOM = 22;
 }
+
+

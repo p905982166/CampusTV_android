@@ -12,7 +12,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.FileNameMap;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Callback;
@@ -75,6 +78,12 @@ public class HttpUtil {
                 builder.addFormDataPart("news_info", JSON.toJSONString((NewsListsWithBLOBs)object));
             }else if(object instanceof String){
                 builder.addFormDataPart("body", (String) object);
+            }else if(object instanceof HashMap){
+                HashMap<String, String> map = (HashMap<String, String>) object;
+                Set<Map.Entry<String, String>> entries = map.entrySet();
+                for (Map.Entry<String, String> entry : entries) {
+                    builder.addFormDataPart(entry.getKey(), entry.getValue());
+                }
             }
 
         }

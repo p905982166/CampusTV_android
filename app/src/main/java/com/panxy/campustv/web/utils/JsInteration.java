@@ -83,6 +83,27 @@ public class JsInteration {
         message.what = Constant.SELECT_IMAGE;
         mHandler.sendMessage(message);
     }
+
+    @JavascriptInterface
+    public void selectTeamLogo(){
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SELECT_TEAM_LOGO;
+        mHandler.sendMessage(message);
+    }
+
+    @JavascriptInterface
+    public void createTeam(String teamName, String teamBelongTo, String teamLogo, String cookie){
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.SUBMIT_CREATE_TEAM;
+        JSONObject jo = new JSONObject();
+        jo.put("teamName", teamName);
+        jo.put("teamBelongTo", teamBelongTo);
+        jo.put("teamLogo", teamLogo);
+        jo.put("cookie", cookie);
+        message.obj = jo;
+        mHandler.sendMessage(message);
+    }
+
     @JavascriptInterface
     public void submitSaveNews(String newsInfo, String bodyItem,String server, String cookie){
         Message message = mHandler.obtainMessage();
@@ -95,6 +116,15 @@ public class JsInteration {
         message.obj = jo;
         mHandler.sendMessage(message);
     }
+
+    @JavascriptInterface
+    public void intoRoom(String type){
+        Message message = mHandler.obtainMessage();
+        message.what = Constant.INTO_ROOM;
+        message.obj = Integer.parseInt(type);
+        mHandler.sendMessage(message);
+    }
+
 
     @JavascriptInterface
     public String getDevice() {

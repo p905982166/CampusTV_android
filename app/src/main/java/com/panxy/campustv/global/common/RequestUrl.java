@@ -13,5 +13,7 @@ public interface RequestUrl {
     /** 创建动态 */
     String CREATE_SOCIAL = Config.campus_accept_web + "social/createSocial";
 
+    /** 创建球队 */
+    String CREATE_TEAM = Config.campus_accept_web + "team/createTeam";
 
 }

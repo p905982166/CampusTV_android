@@ -41,6 +41,8 @@ import com.panxy.campustv.R;
 import com.panxy.campustv.global.activity.BaseActivity;
 import com.panxy.campustv.global.common.Constant;
 import com.panxy.campustv.global.common.RequestUrl;
+import com.panxy.campustv.room.MainRoomActivity;
+import com.panxy.campustv.room.video.push.VideoPushActivity;
 import com.panxy.campustv.web.entity.NewsListsWithBLOBs;
 import com.panxy.campustv.web.utils.HttpUtil;
 import com.panxy.campustv.web.utils.JsInteration;
@@ -48,6 +50,7 @@ import com.panxy.campustv.web.utils.MyWebViewClient;
 import com.panxy.campustv.web.utils.uploadlibrary.listener.ProgressListener;
 import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.Permission;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -55,7 +58,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import barlibarary.BarHide;
 import barlibarary.ImmersionBar;
@@ -80,6 +85,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
     private final int FUNCTION_PICK_HEAD_IMAGE = 4;
     private final int FUNCTION_SOCIAL_CAMERA = 5;
     private final int FUNCTION_SOCIAL_ALBUM = 6;
+    private final int FUNCTION_PICK_TEAM_LOGO = 7;
     private String cookie = "";
 
     private WebView mWebview;
@@ -108,6 +114,9 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                     break;
                 case Constant.SOCIAL_CAMERA:
                     selectSocialCamera();
+                    break;
+                case Constant.SELECT_TEAM_LOGO:
+                    selectTeamLogo();
                     break;
                 case Constant.SOCIAL_ALBUM:
                     selectSocialAlbum();
@@ -167,11 +176,118 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                         Toast.makeText(WebActivity.this, jo.getString("msg"), Toast.LENGTH_SHORT).show();
                     }
                     break;
+                case Constant.SUBMIT_CREATE_TEAM:
+                    jo = (JSONObject) msg.obj;
+                    String teamName = jo.getString("teamName");
+                    String teamBelongTo = jo.getString("teamBelongTo");
+                    String teamLogo = jo.getString("teamLogo");
+                    cookie = jo.getString("cookie");
+                    createTeam(teamName, teamBelongTo, teamLogo, cookie);
+                    break;
+                case Constant.REQUEST_CREATE_TEAM_SUCCESS:
+                    jo = (JSONObject) msg.obj;
+                    if(jo.getString("state").equals("200")){
+                        Toast.makeText(WebActivity.this, "队伍创建成功", Toast.LENGTH_SHORT).show();
+                        Integer teamId = jo.getInteger("teamId");
+                        mWebview.evaluateJavascript("javascript:createTeamSuccess('"+teamId+"')", null);
+                    }else {
+                        Toast.makeText(WebActivity.this, jo.getString("msg"), Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                case Constant.INTO_ROOM:
+                    int userType = (int) msg.obj;
+                    intoTvRoom(userType);
+                    break;
                 default:
                     break;
             }
         }
     };
+
+    private void intoTvRoom(final int type){
+        AndPermission.with(WebActivity.this)
+                .runtime()
+                .permission(Permission.Group.CAMERA)
+                .onGranted(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        if(type == 1){
+                            startActivity(new Intent(WebActivity.this, VideoPushActivity.class));
+                        }else {
+                            startActivity(new Intent(WebActivity.this, MainRoomActivity.class));
+                        }
+                    }
+                })
+                .onDenied(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        Toast.makeText(WebActivity.this,"读写sdk权限被拒绝",Toast.LENGTH_LONG).show();
+                    }
+                })
+                .start();
+    }
+
+    private void createTeam(String teamName, String teamBelongTo, String teamLogo, String cookie) {
+        String logoPath = teamLogo.substring("http://androidimg".length());
+        List<File> files = new ArrayList<>();
+        File file = new File(logoPath);
+        Bitmap.CompressFormat pic = null;
+        //裁剪图片
+        try{
+            if(file.getName().endsWith("jpg") || file.getName().endsWith("jpeg") ){
+                pic = Bitmap.CompressFormat.JPEG;
+            }else if(file.getName().endsWith("png")){
+                pic = Bitmap.CompressFormat.PNG;
+            }else {
+                Toast.makeText(WebActivity.this, "不支持该格式的图片，请重新选择", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            long timeStamp = System.currentTimeMillis();
+            int random = (int)(Math.random() * 1000);
+            File temp = new File(getExternalCacheDir(), timeStamp + "" + random + ".jpg");
+            FileInputStream fis = new FileInputStream(logoPath);
+            Bitmap bitmap  = BitmapFactory.decodeStream(fis);
+            Bitmap compressBitmap = ImageCompressL(bitmap);
+            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(temp));
+            compressBitmap.compress(pic, 100, bos);
+            bos.flush();
+            bos.close();
+
+            files.add(temp);
+            Map<String, Object> map = new HashMap<>();
+            map.put("teamName", teamName);
+            map.put("teamBelongTo", teamBelongTo);
+            HttpUtil.doAsynchFileHttpPost(RequestUrl.CREATE_TEAM, files, map,
+                    new ProgressListener() {
+                        @Override
+                        public void onProgress(long currentBytes, long contentLength, boolean done) {
+                            int progress = (int) ((100 * currentBytes) / contentLength);
+                            Log.i("uploading", (100 * currentBytes) / contentLength + " % done ");
+                        }
+                    }, new Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+
+                        }
+
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            String res = response.body().string();
+                            JSONObject resObj = JSONObject.parseObject(res);
+                            Message message = mHandler.obtainMessage();
+                            message.what = Constant.REQUEST_CREATE_TEAM_SUCCESS;
+                            message.obj = resObj;
+                            mHandler.sendMessage(message);
+
+                        }
+                    }, cookie);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+
+
+    }
 
     private void createSocial(String socialBody, String fileList, String cookie) {
 
@@ -511,6 +627,30 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
         showHide();
     }
 
+    private void selectTeamLogo() {
+        AndPermission.with(WebActivity.this)
+                .runtime()
+                .permission(com.yanzhenjie.permission.Permission.Group.STORAGE)
+                .onGranted(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        //打开相册
+                        function = FUNCTION_PICK_TEAM_LOGO;  //表示现在做选择图标的动作
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.setType("image/*");
+                        startActivityForResult(intent, 1); // 打开相册
+
+                    }
+                })
+                .onDenied(new Action<List<String>>() {
+                    @Override
+                    public void onAction(List<String> data) {
+                        Toast.makeText(WebActivity.this,"读写sdk权限被拒绝",Toast.LENGTH_LONG).show();
+                    }
+                })
+                .start();
+    }
+
     //目前只实现了选择一个图标
     private void selectHeadImage() {
         AndPermission.with(WebActivity.this)
@@ -612,12 +752,12 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
     private void selectSocialCamera() {
         AndPermission.with(WebActivity.this)
                 .runtime()
-                .permission(com.yanzhenjie.permission.Permission.Group.STORAGE)
+                .permission(Permission.Group.CAMERA)
                 .onGranted(new Action<List<String>>() {
                     @Override
                     public void onAction(List<String> data) {
-                        //打开相册
-                        function = FUNCTION_SOCIAL_CAMERA;  //表示现在做选择图片的动作
+                        //打开相机
+                        function = FUNCTION_SOCIAL_CAMERA;  //表示现在做拍照的动作
                         openSysCamera();
 
                     }
@@ -738,6 +878,7 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
                 String selection = MediaStore.Images.Media._ID + "=" + id;
                 if(function == FUNCTION_PICK_NEWS_ICON
                         || function == FUNCTION_SOCIAL_ALBUM
+                        || function == FUNCTION_PICK_TEAM_LOGO
                         || function == FUNCTION_PICK_HEAD_IMAGE
                         || function == FUNCTION_PICK_NEWS_IMAGE){
                     //Images
@@ -811,6 +952,19 @@ public class WebActivity extends BaseActivity implements View.OnClickListener {
 
             Bitmap.CompressFormat pic = null;
             switch (function){
+                case FUNCTION_PICK_TEAM_LOGO:
+                    if(file.getName().endsWith("jpg") || file.getName().endsWith("jpeg") ){
+                        pic = Bitmap.CompressFormat.JPEG;
+                    }else if(file.getName().endsWith("png")){
+                        pic = Bitmap.CompressFormat.PNG;
+                    }else {
+                        Toast.makeText(WebActivity.this, "不支持该格式的图片，请重新选择", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    mWebview.evaluateJavascript("javascript:changeTeamLogo("+ tempPath +")", null);
+
+                    break;
                 case FUNCTION_PICK_HEAD_IMAGE:
 
                     if(file.getName().endsWith("jpg") || file.getName().endsWith("jpeg") ){
